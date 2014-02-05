@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("Retrofit.Net")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("Retrofit.Net turns your REST API into a C# service. See https://github.com/jordan-thoms/Retrofit.Net for details")]
-[assembly: AssemblyCompany("Jordan Thoms")
+[assembly: AssemblyCompany("Jordan Thoms")]
 [assembly: AssemblyProduct("Retrofit.Net")]
 [assembly: AssemblyCopyright("Copyright ©  2013")]
 [assembly: AssemblyTrademark("")]
