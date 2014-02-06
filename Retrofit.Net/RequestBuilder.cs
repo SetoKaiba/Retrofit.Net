@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Castle.Core.Internal;
 using RestSharp;
 
 namespace Retrofit.Net
@@ -14,34 +10,25 @@ namespace Retrofit.Net
 
         public RequestBuilder(RestMethodInfo methodInfo, object[] arguments)
         {
-            this.methodInfo = methodInfo;
-            this.arguments = arguments;
+            methodInfo = methodInfo;
+            arguments = arguments;
         }
 
         public IRestRequest Build()
         {
-            var request =  new RestRequest(methodInfo.Path, methodInfo.Method);
-            request.RequestFormat = DataFormat.Json; // TODO: Allow XML requests?
-            for (int i = 0; i < arguments.Count(); i++)
-            {
-                Object argument = arguments[i];
-                var usage = methodInfo.ParameterUsage[i];
+            var request =  new RestRequest(methodInfo.Path, methodInfo.Method)
+                               {
+                                   RequestFormat = DataFormat.Json // TODO: Allow XML requests?
+                               };
 
-                switch (usage)
-                {
-                    case RestMethodInfo.ParamUsage.Query:
-                        request.AddParameter(methodInfo.ParameterNames[i], argument);
-                        break;
-                    case RestMethodInfo.ParamUsage.Path:
-                        request.AddUrlSegment(methodInfo.ParameterNames[i], argument.ToString());
-                        break;
-                    case RestMethodInfo.ParamUsage.Body:
-                        request.AddBody(argument);
-                        break;
-                    default:
-                        throw new ArgumentOutOfRangeException();
-                }
-            }
+            methodInfo.Parameters.ForEach(p => p.Value = arguments[methodInfo.Parameters.IndexOf(p)]);
+
+            methodInfo.BodyParameters.ForEach(bp => request.AddBody(bp.Value));
+            methodInfo.QueryParameters.ForEach(bp => request.AddParameter(bp.Name, bp.Value.ToString()));
+            methodInfo.PathParameters.ForEach(bp => request.AddUrlSegment(bp.Name, bp.Value.ToString()));
+            methodInfo.HeaderParameters.ForEach(bp => request.AddHeader(bp.Name, bp.Value.ToString()));
+
+            
 
             return request;
         }

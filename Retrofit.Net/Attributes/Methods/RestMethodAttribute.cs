@@ -9,7 +9,7 @@ namespace Retrofit.Net.Attributes.Methods
 
         public RestMethodAttribute(Method method)
         {
-            this.Method = method;
+            Method = method;
         }
     }
 }

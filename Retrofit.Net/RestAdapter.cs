@@ -10,15 +10,13 @@ namespace Retrofit.Net
 
         public RestAdapter(string baseUrl)
         {
-            this.restClient = new RestClient(baseUrl);
+            restClient = new RestClient(baseUrl);
         }
 
         public RestAdapter(IRestClient client)
         {
-            this.restClient = client;
+            restClient = client;
         }
-
-
 
         public string Server
         {

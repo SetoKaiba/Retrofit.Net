@@ -1,16 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RestSharp;
 
 namespace Retrofit.Net.Attributes.Parameters
 {
-    public class QueryAttribute : ValueAttribute
+    public class QueryAttribute : ParameterAttribute
     {
         public QueryAttribute(string value)
         {
-            this.Value = value;
+            Value = value;
+        }
+
+        public override ParameterType Type
+        {
+            get
+            {
+                return ParameterType.QueryString;
+            }
         }
     }
 }

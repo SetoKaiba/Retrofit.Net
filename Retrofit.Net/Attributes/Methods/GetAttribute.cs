@@ -7,7 +7,7 @@ namespace Retrofit.Net.Attributes.Methods
     {
         public GetAttribute(string path)
         {
-            this.Value = path;
+            Value = path;
         }
     }
 }

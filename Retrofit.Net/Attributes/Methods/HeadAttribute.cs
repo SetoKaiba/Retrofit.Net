@@ -7,7 +7,7 @@ namespace Retrofit.Net.Attributes.Methods
     {
         public HeadAttribute(string path)
         {
-            this.Value = path;
+            Value = path;
         }
     }
 }

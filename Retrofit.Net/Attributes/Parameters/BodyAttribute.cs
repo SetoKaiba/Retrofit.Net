@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using RestSharp;
 
 namespace Retrofit.Net.Attributes.Parameters
 {
-    public class BodyAttribute : ValueAttribute
+    public class BodyAttribute : ParameterAttribute
     {
-        public BodyAttribute()
+        public override ParameterType Type
         {
+            get
+            {
+                return ParameterType.RequestBody;
+            }
         }
     }
 }

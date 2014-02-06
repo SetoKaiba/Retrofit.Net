@@ -2,11 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+using RestSharp;
 using Retrofit.Net.Attributes;
 using Retrofit.Net.Attributes.Methods;
-using Retrofit.Net.Attributes.Parameters;
 
 namespace Retrofit.Net
 {
@@ -14,20 +12,46 @@ namespace Retrofit.Net
     {
         private readonly MethodInfo methodInfo;
         protected object RequestMethod { get; set; }
-        public RestSharp.Method Method { get; set; }
+        public Method Method { get; set; }
         public string Path { get; set; }
 
-        public List<ParamUsage> ParameterUsage { get; set; }
-        public List<string> ParameterNames { get; set; }
+        public List<Parameter> Parameters { get; set; }
 
-        internal enum ParamUsage
+        public IEnumerable<Parameter> BodyParameters
         {
-            Query, Path, Body
+            get
+            {
+                return Parameters.Where(p => p.Type == ParameterType.RequestBody);
+            }
+        }
+
+        public IEnumerable<Parameter> HeaderParameters
+        {
+            get
+            {
+                return Parameters.Where(p => p.Type == ParameterType.HttpHeader);
+            }
+        }
+
+        public IEnumerable<Parameter> QueryParameters
+        {
+            get
+            {
+                return Parameters.Where(p => p.Type == ParameterType.QueryString);
+            }
+        }
+
+        public IEnumerable<Parameter> PathParameters
+        {
+            get
+            {
+                return Parameters.Where(p => p.Type == ParameterType.UrlSegment);
+            }
         }
 
         public RestMethodInfo(MethodInfo methodInfo)
         {
-            this.methodInfo = methodInfo;
+            methodInfo = methodInfo;
             Init(); // TODO: If supporting async, this should be deferred until needed so we don't
             // block the calling thread for longer than needed.
         }
@@ -42,7 +66,7 @@ namespace Retrofit.Net
         {
             foreach (ValueAttribute attribute in methodInfo.GetCustomAttributes(true))
             {
-                var innerAttributes = attribute.GetType().GetCustomAttributes();
+                var innerAttributes = attribute.GetType().GetCustomAttributes(false);
 
                 // Find the request method attribute, if present.
                 var methodAttribute = innerAttributes.FirstOrDefault(theAttribute => theAttribute.GetType() == typeof(RestMethodAttribute)) as RestMethodAttribute;
@@ -57,36 +81,21 @@ namespace Retrofit.Net
                     Method = methodAttribute.Method;
                     Path = attribute.Value;
                 }
-
-                // TODO: Handle other types of annotations (e.g. headers) here
             }
         }
 
         private void ParseParameters()
         {
-            ParameterUsage = new List<ParamUsage>();
-            ParameterNames = new List<string>();
+            Parameters = new List<Parameter>();
+            
             foreach (ParameterInfo parameter in methodInfo.GetParameters())
             {
-                var attribute = (ValueAttribute) parameter.GetCustomAttributes(false).FirstOrDefault();
-                if (attribute == null)
+                var parameterAttribute = (ParameterAttribute) parameter.GetCustomAttributes(false).FirstOrDefault();
+                if (parameterAttribute == null)
                 {
                     throw new ArgumentException("No annotation found on parameter " + parameter.Name + " of " + methodInfo.Name);
                 }
-                var type = attribute.GetType();
-                if (type == typeof(PathAttribute))
-                {
-                    ParameterUsage.Add(ParamUsage.Path);
-                    ParameterNames.Add(attribute.Value);
-                } else if (type == typeof (BodyAttribute))
-                {
-                    ParameterUsage.Add(ParamUsage.Body);
-                    ParameterNames.Add(null);
-                } else if (type == typeof(QueryAttribute))
-                {
-                    ParameterUsage.Add(ParamUsage.Query);
-                    ParameterNames.Add(attribute.Value);
-                }
+                Parameters.Add(new Parameter { Name = parameterAttribute.Value, Type = parameterAttribute.Type });
             }
         }
 
