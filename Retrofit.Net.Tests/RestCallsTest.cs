@@ -1,6 +1,8 @@
 ﻿using System.Linq;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading.Tasks;
+
 using FluentAssertions;
 using NSubstitute;
 using NUnit.Framework;
@@ -20,28 +22,31 @@ namespace Retrofit.Net.Tests
         public interface IRestInterface
         {
             [Get("people")]
-            RestResponse<List<Person>> GetPeople();
-
-            [Get("people/{id}")]
-            RestResponse<Person> GetPerson([Path("id")] int id);
-
-            [Get("people/{id}")]
-            RestResponse<Person> GetPerson([Path("id")] int id, [Query("q")] string query);
-
-            [Post("people")]
-            RestResponse<Person> AddPerson([Body] Person person);
-
-            [Put("people/{id}")]
-            RestResponse<Person> UpdatePerson([Path("id")] int id, [Body] Person person);
-
-            [Head("people/{id}")]
-            RestResponse<Person> HeadPerson([Path("id")] int id);
-
-            [Delete("people/{id}")]
-            RestResponse<Person> DeletePerson([Path("id")] int id);
+            Task<IRestResponse<List<Person>>> GetPeopleAsync();
 
             [Get("people")]
-            RestResponse<Person> AuthenticatedRequest([Header("Authorization")] string authorization);
+            IRestResponse<List<Person>> GetPeople();
+
+            [Get("people/{id}")]
+            IRestResponse<Person> GetPerson([Path("id")] int id);
+
+            [Get("people/{id}")]
+            IRestResponse<Person> GetPerson([Path("id")] int id, [Query("q")] string query);
+
+            [Post("people")]
+            IRestResponse<Person> AddPerson([Body] Person person);
+
+            [Put("people/{id}")]
+            IRestResponse<Person> UpdatePerson([Path("id")] int id, [Body] Person person);
+
+            [Head("people/{id}")]
+            IRestResponse<Person> HeadPerson([Path("id")] int id);
+
+            [Delete("people/{id}")]
+            IRestResponse<Person> DeletePerson([Path("id")] int id);
+
+            [Get("people")]
+            IRestResponse<Person> AuthenticatedRequest([Header("Authorization")] string authorization);
         }
 
         public class Person
@@ -55,6 +60,27 @@ namespace Retrofit.Net.Tests
             restClient = Substitute.For<IRestClient>();
             adapter = new RestAdapter(restClient);
             client = adapter.Create<IRestInterface>();
+        }
+
+        [Test]
+        public void TestGetPeopleAsync()
+        {
+            var persons = new RestResponse<List<Person>>
+                              {
+                                  Data = new List<Person>
+                                             {
+                                                 new Person { Name = "name_1" }, 
+                                                 new Person { Name = "name_2" }
+                                             }
+                              };
+            restClient.ExecuteTaskAsync<List<Person>>(Arg.Is<IRestRequest>(request =>
+                request.Method == Method.GET && request.Resource == "people"
+                )).Returns(new Task<IRestResponse<List<Person>>>(() => persons));
+
+            Task<IRestResponse<List<Person>>> people = client.GetPeopleAsync();
+            people.Start();
+            IRestResponse<List<Person>> restResponse = people.Result;
+            restResponse.Data.Should().Equal(persons.Data);
         }
 
         [Test]
@@ -72,7 +98,8 @@ namespace Retrofit.Net.Tests
                 request.Method == Method.GET && request.Resource == "people"
                 )).Returns(persons);
 
-            RestResponse<List<Person>> people = client.GetPeople();
+            var people = client.GetPeople();
+
             people.Data.Should().Equal(persons.Data);
         }
 
@@ -174,7 +201,7 @@ namespace Retrofit.Net.Tests
                     && request.Parameters.Any(p => p.Type == ParameterType.HttpHeader && p.Name == "Authorization" && p.Value == "auth key")))
                     .Returns(personResponse);
 
-            RestResponse<Person> updatePerson = client.AuthenticatedRequest("auth key");
+            IRestResponse<Person> updatePerson = client.AuthenticatedRequest("auth key");
 
             updatePerson.StatusCode.Should().Be(HttpStatusCode.OK);
         }
