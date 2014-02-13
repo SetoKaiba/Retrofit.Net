@@ -5,28 +5,28 @@ namespace Retrofit.Net
 {
     class RequestBuilder
     {
-        private readonly RestMethodInfo methodInfo;
-        private readonly object[] arguments;
+        private readonly RestMethodInfo _methodInfo;
+        private readonly object[] _arguments;
 
         public RequestBuilder(RestMethodInfo methodInfo, object[] arguments)
         {
-            methodInfo = methodInfo;
-            arguments = arguments;
+            _methodInfo = methodInfo;
+            _arguments = arguments;
         }
 
         public IRestRequest Build()
         {
-            var request =  new RestRequest(methodInfo.Path, methodInfo.Method)
+            var request =  new RestRequest(_methodInfo.Path, _methodInfo.Method)
                                {
                                    RequestFormat = DataFormat.Json // TODO: Allow XML requests?
                                };
 
-            methodInfo.Parameters.ForEach(p => p.Value = arguments[methodInfo.Parameters.IndexOf(p)]);
+            _methodInfo.Parameters.ForEach(p => p.Value = _arguments[_methodInfo.Parameters.IndexOf(p)]);
 
-            methodInfo.BodyParameters.ForEach(bp => request.AddBody(bp.Value));
-            methodInfo.QueryParameters.ForEach(bp => request.AddParameter(bp.Name, bp.Value.ToString()));
-            methodInfo.PathParameters.ForEach(bp => request.AddUrlSegment(bp.Name, bp.Value.ToString()));
-            methodInfo.HeaderParameters.ForEach(bp => request.AddHeader(bp.Name, bp.Value.ToString()));
+            _methodInfo.BodyParameters.ForEach(bp => request.AddBody(bp.Value));
+            _methodInfo.QueryParameters.ForEach(bp => request.AddParameter(bp.Name, bp.Value.ToString()));
+            _methodInfo.PathParameters.ForEach(bp => request.AddUrlSegment(bp.Name, bp.Value.ToString()));
+            _methodInfo.HeaderParameters.ForEach(bp => request.AddHeader(bp.Name, bp.Value.ToString()));
 
             
 

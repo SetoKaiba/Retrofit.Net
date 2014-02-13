@@ -10,7 +10,7 @@ namespace Retrofit.Net
 {
     class RestMethodInfo
     {
-        private readonly MethodInfo methodInfo;
+        private readonly MethodInfo _methodInfo;
         protected object RequestMethod { get; set; }
         public Method Method { get; set; }
         public string Path { get; set; }
@@ -51,7 +51,7 @@ namespace Retrofit.Net
 
         public RestMethodInfo(MethodInfo methodInfo)
         {
-            methodInfo = methodInfo;
+            _methodInfo = methodInfo;
             Init(); // TODO: If supporting async, this should be deferred until needed so we don't
             // block the calling thread for longer than needed.
         }
@@ -64,7 +64,7 @@ namespace Retrofit.Net
 
         private void ParseMethodAttributes()
         {
-            foreach (ValueAttribute attribute in methodInfo.GetCustomAttributes(true))
+            foreach (ValueAttribute attribute in _methodInfo.GetCustomAttributes(true))
             {
                 var innerAttributes = attribute.GetType().GetCustomAttributes(false);
 
@@ -75,7 +75,7 @@ namespace Retrofit.Net
                 {
                     if (RequestMethod != null)
                     {
-                        throw new ArgumentException("Method " + methodInfo.Name + " contains multiple HTTP methods. Found " + RequestMethod  + " and " + methodAttribute.Method);
+                        throw new ArgumentException("Method " + _methodInfo.Name + " contains multiple HTTP methods. Found " + RequestMethod  + " and " + methodAttribute.Method);
                     }
 
                     Method = methodAttribute.Method;
@@ -88,12 +88,12 @@ namespace Retrofit.Net
         {
             Parameters = new List<Parameter>();
             
-            foreach (ParameterInfo parameter in methodInfo.GetParameters())
+            foreach (ParameterInfo parameter in _methodInfo.GetParameters())
             {
                 var parameterAttribute = (ParameterAttribute) parameter.GetCustomAttributes(false).FirstOrDefault();
                 if (parameterAttribute == null)
                 {
-                    throw new ArgumentException("No annotation found on parameter " + parameter.Name + " of " + methodInfo.Name);
+                    throw new ArgumentException("No annotation found on parameter " + parameter.Name + " of " + _methodInfo.Name);
                 }
                 Parameters.Add(new Parameter { Name = parameterAttribute.Value, Type = parameterAttribute.Type });
             }

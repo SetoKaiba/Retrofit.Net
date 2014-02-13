@@ -7,11 +7,11 @@ namespace Retrofit.Net
 {
     public class RestInterceptor : IInterceptor
     {
-        private readonly IRestClient restClient;
+        private readonly IRestClient _restClient;
 
         public RestInterceptor(IRestClient restClient)
         {
-            restClient = restClient;
+            _restClient = restClient;
         }
 
         public void Intercept(IInvocation invocation)
@@ -24,10 +24,10 @@ namespace Retrofit.Net
             var responseType = invocation.Method.ReturnType;
             var genericTypeArgument = responseType.GetGenericArguments()[0];
             // We have to find the method manually due to limitations of GetMethod()
-            var methods = restClient.GetType().GetMethods();
+            var methods = _restClient.GetType().GetMethods();
             MethodInfo method = methods.Where(m => m.Name == "Execute").First(m => m.IsGenericMethod);
             MethodInfo generic = method.MakeGenericMethod(genericTypeArgument);
-            invocation.ReturnValue =  generic.Invoke(restClient, new object[] { request });
+            invocation.ReturnValue =  generic.Invoke(_restClient, new object[] { request });
 
         }
     }
