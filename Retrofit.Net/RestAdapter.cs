@@ -13,14 +13,22 @@ namespace Retrofit.Net
             restClient = new RestClient(baseUrl);
         }
 
+        public RestAdapter(string baseUrl, Authenticator authenticator) : this(baseUrl)
+        {
+            restClient.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(authenticator.AccessToken, authenticator.TokenType);
+        }
+
         public RestAdapter(IRestClient client)
         {
             restClient = client;
         }
 
-        public string Server
+        public RestAdapter(IRestClient client, Authenticator authenticator) : this (client)
         {
-            get; set; }
+            restClient.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(authenticator.AccessToken, authenticator.TokenType);
+        }
+
+        public string Server { get; set; }
 
         public T Create<T>() where T : class
         {
