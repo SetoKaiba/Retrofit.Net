@@ -23,8 +23,8 @@ namespace Retrofit.Net
 
             _methodInfo.Parameters.ForEach(p => p.Value = _arguments[_methodInfo.Parameters.IndexOf(p)]);
 
-            _methodInfo.BodyParameters.ForEach(bp => request.AddBody(bp.Value));
-            _methodInfo.QueryParameters.ForEach(bp => request.AddParameter(bp.Name, bp.Value.ToString()));
+            _methodInfo.BodyParameters.ForEach(bp => request.AddParameter(bp.Name, bp.Value.ToString()));
+            _methodInfo.QueryParameters.ForEach(bp => request.AddParameter(bp.Name, bp.Value.ToString(), ParameterType.QueryString));
             _methodInfo.PathParameters.ForEach(bp => request.AddUrlSegment(bp.Name, bp.Value.ToString()));
             _methodInfo.HeaderParameters.ForEach(bp => request.AddHeader(bp.Name, bp.Value.ToString()));
 

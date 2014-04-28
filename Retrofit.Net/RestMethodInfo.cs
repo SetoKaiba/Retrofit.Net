@@ -94,7 +94,7 @@ namespace Retrofit.Net
                 {
                     throw new ArgumentException("No annotation found on parameter " + parameter.Name + " of " + _methodInfo.Name);
                 }
-                Parameters.Add(new Parameter { Name = parameterAttribute.Value, Type = parameterAttribute.Type });
+                Parameters.Add(new Parameter { Name = parameterAttribute.Value ?? parameter.Name, Type = parameterAttribute.Type });
             }
         }
 

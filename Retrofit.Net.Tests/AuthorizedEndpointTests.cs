@@ -1,8 +1,6 @@
 ﻿using System.Linq;
-using System.Net.Cache;
+using System.Net;
 using System.Threading.Tasks;
-
-using FluentAssertions;
 
 using NSubstitute;
 
@@ -24,17 +22,19 @@ namespace Retrofit.Net.Tests
 
         private RestAdapter _restAdapter;
 
-        public class AuthorizedResource
+        private IAuthorizedResourceEndpoint _authorizedResourceEndpoint;
+
+        public class AuthorizedResource : IResource
         {
         }
 
-        public class AuthorizedEndpointTests
+        public interface IAuthorizedResourceEndpoint
         {
-            public interface IAuthorizedResourceEndpoint
-            {
-                [Get("/resource/{id}")]
-                Task<IRestResponse<AuthorizedResource>> GetAuthorizedResourceAsync([Path("id")] int id);
-            }
+            [Get("/resource/{id}")]
+            Task<IRestResponse<AuthorizedResource>> GetAuthorizedResourceAsync([Path("id")] int id);
+
+            [Get("/resource/{id}")]
+            IRestResponse<AuthorizedResource> GetById([Path("id")] int id);
         }
 
         [SetUp]
@@ -45,10 +45,11 @@ namespace Retrofit.Net.Tests
                              {
                                  AuthenticationEndpoint = "/oauth2/token",
                                  AccessToken = "token",
-                                 TokenType = "bearer",
+                                 GrantType = "bearer",
                                  RefreshToken = "refresh_token"
                              };
             _restAdapter = new RestAdapter(_restClient, _authenticator);
+            _authorizedResourceEndpoint = _restAdapter.Create<IAuthorizedResourceEndpoint, AuthorizedResource>();
         }
 
         [Test]
@@ -69,6 +70,49 @@ namespace Retrofit.Net.Tests
 
             Assert.IsTrue(restRequest.Parameters.Count(p => p.Type == ParameterType.HttpHeader) == 1);
             Assert.AreEqual("bearer token", restRequest.Parameters.First(p => p.Type == ParameterType.HttpHeader).Value);
+        }
+
+        [Test]
+        public void ExpiredToken_refreshes_the_token_using_the_refresh_token()
+        {
+            var unauthorizedResponse = new RestResponse<AuthorizedResource> { StatusCode = HttpStatusCode.Unauthorized };
+            var authorizedResponse = new RestResponse<AuthorizedResource> { StatusCode = HttpStatusCode.OK };
+            _restClient
+                .Execute<AuthorizedResource>(
+                    Arg.Is<RestRequest>(rr =>
+                        rr.Resource == "/resource/{id}" &&
+                        rr.Parameters.Any(p => p.Name == "id" && (string)p.Value == "1")))
+                .Returns(unauthorizedResponse, authorizedResponse);
+
+            var restResponse = _authorizedResourceEndpoint.GetById(1);
+
+            _restClient
+                .Received()
+                .Execute<Authenticator>(Arg.Is<RestRequest>(rr => 
+                    rr.Method == Method.POST 
+                    && rr.Parameters.Any(p => p.Name == "refresh_token")
+                    && rr.Parameters.Any(p => (p.Name == "token_type") && ((string)p.Value == "refresh_token"))));
+        }
+
+        [Test]
+        public void ExpiredToken_with_async_call_will_still_call_refresh_token()
+        {
+            var unauthorizedResponseTask = Task.Factory.StartNew(() => (IRestResponse<AuthorizedResource>) new RestResponse<AuthorizedResource> { StatusCode = HttpStatusCode.Unauthorized });
+            var authorizedResponseTask = Task.Factory.StartNew(() => (IRestResponse<AuthorizedResource>) new RestResponse<AuthorizedResource> { StatusCode = HttpStatusCode.OK });
+
+            _restClient.ExecuteTaskAsync<AuthorizedResource>(
+                Arg.Is<RestRequest>(
+                    rr =>
+                        rr.Resource == "/resource/{id}"
+                        && rr.Parameters.Any(p => p.Name == "id" && (string)p.Value == "1")))
+                .Returns(unauthorizedResponseTask, authorizedResponseTask);
+
+            var restResponse = _authorizedResourceEndpoint.GetAuthorizedResourceAsync(1);
+
+            _restClient.Received().Execute<Authenticator>(Arg.Is<RestRequest>(rr =>
+                rr.Method == Method.POST
+                && rr.Parameters.Any(p => p.Name == "refresh_token")
+                && rr.Parameters.Any(p => (p.Name == "token_type") && ((string)p.Value == "refresh_token"))));
         }
     }
 }

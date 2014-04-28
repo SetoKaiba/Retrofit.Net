@@ -1,10 +1,14 @@
 ﻿using Castle.DynamicProxy;
 using RestSharp;
 
+using Retrofit.Net.Interceptors;
+
 namespace Retrofit.Net
 {
     public class RestAdapter
     {
+        private readonly Authenticator _authenticator;
+
         private static readonly ProxyGenerator _generator = new ProxyGenerator();
         private IRestClient restClient;
 
@@ -15,7 +19,7 @@ namespace Retrofit.Net
 
         public RestAdapter(string baseUrl, Authenticator authenticator) : this(baseUrl)
         {
-            restClient.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(authenticator.AccessToken, authenticator.TokenType);
+            restClient.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(authenticator.AccessToken, authenticator.GrantType);
         }
 
         public RestAdapter(IRestClient client)
@@ -25,7 +29,8 @@ namespace Retrofit.Net
 
         public RestAdapter(IRestClient client, Authenticator authenticator) : this (client)
         {
-            restClient.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(authenticator.AccessToken, authenticator.TokenType);
+            _authenticator = authenticator;
+            restClient.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(authenticator.AccessToken, authenticator.GrantType);
         }
 
         public string Server { get; set; }
@@ -33,6 +38,21 @@ namespace Retrofit.Net
         public T Create<T>() where T : class
         {
             return _generator.CreateInterfaceProxyWithoutTarget<T>(new RestInterceptor(restClient));
+        }
+
+        public T Create<T, TR>()
+            where T : class
+            where TR : class
+        {
+            var proxyGenerationOptions = new ProxyGenerationOptions
+                                         {
+                                             Selector = new AsyncVsNonAsyncInterceptorSelector()
+                                         };
+
+            return _generator.CreateInterfaceProxyWithoutTarget<T>(
+                new RestInterceptor(restClient), 
+                new RefreshTokenInterceptor<TR>(restClient, _authenticator), 
+                new RestInterceptor(restClient, true));
         }
     }
 }

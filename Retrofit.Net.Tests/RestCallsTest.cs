@@ -47,9 +47,12 @@ namespace Retrofit.Net.Tests
 
             [Get("people")]
             IRestResponse<Person> AuthenticatedRequest([Header("Authorization")] string authorization);
+
+            [Get("people")]
+            Task<IRestResponse<Person>> GetPersonAsync();
         }
 
-        public class Person
+        public class Person : IResource
         {
             public string Name { get; set; }
         }
@@ -59,28 +62,24 @@ namespace Retrofit.Net.Tests
         {
             restClient = Substitute.For<IRestClient>();
             adapter = new RestAdapter(restClient);
-            client = adapter.Create<IRestInterface>();
+            client = adapter.Create<IRestInterface, Person>();
         }
 
         [Test]
         public void TestGetPeopleAsync()
         {
-            var persons = new RestResponse<List<Person>>
+            var persons = new RestResponse<Person>
                               {
-                                  Data = new List<Person>
-                                             {
-                                                 new Person { Name = "name_1" }, 
-                                                 new Person { Name = "name_2" }
-                                             }
+                                  StatusCode = HttpStatusCode.OK,
+                                  Data = new Person { Name = "name_1" }
                               };
-            restClient.ExecuteTaskAsync<List<Person>>(Arg.Is<IRestRequest>(request =>
+            restClient.ExecuteTaskAsync<Person>(Arg.Is<IRestRequest>(request =>
                 request.Method == Method.GET && request.Resource == "people"
-                )).Returns(new Task<IRestResponse<List<Person>>>(() => persons));
+                )).Returns(Task<IRestResponse<Person>>.Factory.StartNew(() => persons));
 
-            Task<IRestResponse<List<Person>>> people = client.GetPeopleAsync();
-            people.Start();
-            IRestResponse<List<Person>> restResponse = people.Result;
-            restResponse.Data.Should().Equal(persons.Data);
+            Task<IRestResponse<Person>> people = client.GetPersonAsync();
+            IRestResponse<Person> restResponse = people.Result;
+            restResponse.Data.Should().Be(persons.Data);
         }
 
         [Test]
@@ -198,10 +197,10 @@ namespace Retrofit.Net.Tests
                 Arg.Is<IRestRequest>(
                     request =>
                     request.Method == Method.GET && request.Resource == "people"
-                    && request.Parameters.Any(p => p.Type == ParameterType.HttpHeader && p.Name == "Authorization" && p.Value == "auth key")))
+                    && request.Parameters.Any(p => p.Type == ParameterType.HttpHeader && p.Name == "Authorization" && (string)p.Value == "auth key")))
                     .Returns(personResponse);
 
-            IRestResponse<Person> updatePerson = client.AuthenticatedRequest("auth key");
+            var updatePerson = client.AuthenticatedRequest("auth key");
 
             updatePerson.StatusCode.Should().Be(HttpStatusCode.OK);
         }

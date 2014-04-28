@@ -4,19 +4,23 @@ using System.Reflection;
 using System.Threading.Tasks;
 
 using Castle.DynamicProxy;
+
 using RestSharp;
 
-namespace Retrofit.Net
+namespace Retrofit.Net.Interceptors
 {
-    public class RestInterceptor : IInterceptor
+    public class RestInterceptor : ISyncInterceptor
     {
         private readonly IRestClient _restClient;
 
         private readonly MethodInfo _executeMethod;
         private readonly MethodInfo _executeAsyncMethod;
 
-        public RestInterceptor(IRestClient restClient)
+        private readonly bool _lastInterceptorInPipeline;
+
+        public RestInterceptor(IRestClient restClient, bool lastInterceptorInPipeline = false)
         {
+            _lastInterceptorInPipeline = lastInterceptorInPipeline;
             _restClient = restClient;
             _executeMethod = _restClient.GetType().GetMethods().First(m => m.Name == "Execute" && m.IsGenericMethod);
             _executeAsyncMethod = _restClient.GetType().GetMethods().First(m => m.Name == "ExecuteTaskAsync" && m.IsGenericMethod && (m.GetParameters().Count() == 1));
@@ -36,6 +40,11 @@ namespace Retrofit.Net
 
             MethodInfo generic = method.MakeGenericMethod(genericTypeArgument);
             invocation.ReturnValue = generic.Invoke(_restClient, new object[] { request });
+
+            if (!_lastInterceptorInPipeline)
+            {
+                invocation.Proceed();
+            }
         }
 
         private static Type GetUnderlyingReturnType(Type responseType)
@@ -46,7 +55,7 @@ namespace Retrofit.Net
                 genericTypeArgument = genericTypeArgument.GetGenericArguments()[0];
             }
 
-            if (genericTypeArgument.GetGenericTypeDefinition() == typeof(IRestResponse<>))
+            if (genericTypeArgument.IsGenericType && genericTypeArgument.GetGenericTypeDefinition() == typeof(IRestResponse<>))
             {
                 genericTypeArgument = genericTypeArgument.GetGenericArguments()[0];
             }
