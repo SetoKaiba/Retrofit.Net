@@ -8,23 +8,29 @@ namespace Retrofit.Net
 
         public string GrantType { get; set; }
 
+        public int ExpiresIn { get; set; }
+
         public string AuthenticationEndpoint { get; set; }
 
-        public string AccessTokenParameterName { get; set; }
+        public string AccessTokenParameterName { get; private set; }
 
-        public string RefreshTokenParameterName { get; set; }
+        public string RefreshTokenParameterName { get; private set; }
 
-        public string GrantTypeParameterName { get; set; }
+        public string GrantTypeParameterName { get; private set; }
 
-        public string ClientSecretParameterName { get; set; }
+        public string ClientIdParameterName { get; private set; }
 
-        public string ClientSecret { get; set; }
+        public string ClientId { get; set; }
+
+        public string ExpiresInName { get; private set; }
 
         public Authenticator()
         {
             AccessTokenParameterName = "access_token";
             RefreshTokenParameterName = "refresh_token";
-            GrantTypeParameterName = "token_type";
+            GrantTypeParameterName = "grant_type";
+            ExpiresInName = "expires_in";
+            ClientIdParameterName = "client_id";
         }
     }
 

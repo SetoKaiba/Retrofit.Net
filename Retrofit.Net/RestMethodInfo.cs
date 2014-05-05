@@ -37,7 +37,7 @@ namespace Retrofit.Net
         {
             get
             {
-                return Parameters.Where(p => p.Type == ParameterType.QueryString);
+                return Parameters.Where(p => p.Type == ParameterType.GetOrPost);
             }
         }
 

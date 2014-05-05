@@ -91,7 +91,7 @@ namespace Retrofit.Net.Tests
                 .Execute<Authenticator>(Arg.Is<RestRequest>(rr => 
                     rr.Method == Method.POST 
                     && rr.Parameters.Any(p => p.Name == "refresh_token")
-                    && rr.Parameters.Any(p => (p.Name == "token_type") && ((string)p.Value == "refresh_token"))));
+                    && rr.Parameters.Any(p => (p.Name == "grant_type") && ((string)p.Value == "refresh_token"))));
         }
 
         [Test]
@@ -112,7 +112,7 @@ namespace Retrofit.Net.Tests
             _restClient.Received().Execute<Authenticator>(Arg.Is<RestRequest>(rr =>
                 rr.Method == Method.POST
                 && rr.Parameters.Any(p => p.Name == "refresh_token")
-                && rr.Parameters.Any(p => (p.Name == "token_type") && ((string)p.Value == "refresh_token"))));
+                && rr.Parameters.Any(p => (p.Name == "grant_type") && ((string)p.Value == "refresh_token"))));
         }
     }
 }

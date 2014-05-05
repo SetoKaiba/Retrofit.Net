@@ -62,7 +62,7 @@ namespace Retrofit.Net.Tests
         {
             restClient = Substitute.For<IRestClient>();
             adapter = new RestAdapter(restClient);
-            client = adapter.Create<IRestInterface, Person>();
+            client = adapter.Create<IRestInterface>();
         }
 
         [Test]
