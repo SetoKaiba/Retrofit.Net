@@ -54,6 +54,7 @@ namespace Retrofit.Net.Interceptors
             var refreshTokenRequest = new RestRequest(_authenticator.AuthenticationEndpoint, Method.POST);
             refreshTokenRequest.AddParameter(_authenticator.RefreshTokenParameterName, _authenticator.RefreshToken);
             refreshTokenRequest.AddParameter(_authenticator.GrantTypeParameterName, "refresh_token");
+            refreshTokenRequest.AddParameter(_authenticator.ClientIdParameterName, _authenticator.ClientId);
             
             _restClient.Execute<Authenticator>(refreshTokenRequest);
         }

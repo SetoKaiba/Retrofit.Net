@@ -14,11 +14,15 @@ namespace Retrofit.Net
 
         public RestAdapter(string baseUrl)
         {
-            restClient = new RestClient(baseUrl);
+            var client = new RestClient(baseUrl);
+            client.RemoveHandler("application/json");
+            client.AddHandler("application/json", new JsonSerializer());
+            restClient = client;
         }
 
         public RestAdapter(string baseUrl, Authenticator authenticator) : this(baseUrl)
         {
+            _authenticator = authenticator;
             restClient.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(authenticator.AccessToken, authenticator.GrantType);
         }
 
@@ -37,7 +41,7 @@ namespace Retrofit.Net
 
         public T Create<T>() where T : class
         {
-            return _generator.CreateInterfaceProxyWithoutTarget<T>(new RestInterceptor(restClient));
+            return _generator.CreateInterfaceProxyWithoutTarget<T>(new RestInterceptor(restClient, true));
         }
 
         public T Create<T, TR>()
