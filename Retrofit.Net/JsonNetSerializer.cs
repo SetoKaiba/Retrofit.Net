@@ -30,7 +30,6 @@ namespace Retrofit.Net
             };
             
             _serializer.Converters.Add(new StringEnumConverter());
-
         }
 
         /// <summary>
