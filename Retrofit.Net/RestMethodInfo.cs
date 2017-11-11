@@ -37,7 +37,7 @@ namespace Retrofit.Net
         {
             get
             {
-                return Parameters.Where(p => p.Type == ParameterType.QueryString);
+                return Parameters.Where(p => p.Type == ParameterType.GetOrPost);
             }
         }
 
@@ -52,8 +52,7 @@ namespace Retrofit.Net
         public RestMethodInfo(MethodInfo methodInfo)
         {
             _methodInfo = methodInfo;
-            Init(); // TODO: If supporting async, this should be deferred until needed so we don't
-            // block the calling thread for longer than needed.
+            Init(); 
         }
 
         private void Init()
@@ -95,7 +94,7 @@ namespace Retrofit.Net
                 {
                     throw new ArgumentException("No annotation found on parameter " + parameter.Name + " of " + _methodInfo.Name);
                 }
-                Parameters.Add(new Parameter { Name = parameterAttribute.Value, Type = parameterAttribute.Type });
+                Parameters.Add(new Parameter { Name = parameterAttribute.Value ?? parameter.Name, Type = parameterAttribute.Type });
             }
         }
 

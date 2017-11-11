@@ -11,7 +11,7 @@ namespace Retrofit.Net.Tests
         private RestAdapter adapter;
         private IPeopleService service;
 
-        public class Person
+        public class Person : IResource
         {
             protected bool Equals(Person other)
             {
@@ -42,7 +42,7 @@ namespace Retrofit.Net.Tests
         public void SetUp()
         {
             adapter = new RestAdapter("http://jordanthoms.apiary.io/");
-            service = adapter.Create<IPeopleService>();
+            service = adapter.Create<IPeopleService, Person>();
         }
 
         [Test]

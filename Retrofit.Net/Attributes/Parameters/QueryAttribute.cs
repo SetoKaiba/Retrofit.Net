@@ -13,7 +13,7 @@ namespace Retrofit.Net.Attributes.Parameters
         {
             get
             {
-                return ParameterType.QueryString;
+                return ParameterType.GetOrPost;
             }
         }
     }
