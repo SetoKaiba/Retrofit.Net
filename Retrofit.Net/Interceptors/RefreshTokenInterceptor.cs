@@ -7,8 +7,8 @@ using RestSharp;
 
 namespace Retrofit.Net.Interceptors
 {
-    public class RefreshTokenInterceptor<R> : ISyncInterceptor
-        where R : class
+    public class RefreshTokenInterceptor<TR> : IInterceptor
+        where TR : class
     {
         private readonly IRestClient _restClient;
 
@@ -20,7 +20,7 @@ namespace Retrofit.Net.Interceptors
             _authenticator = authenticator;
         }
 
-        public async Task InterceptAsync(Task<IRestResponse<R>> previousInvocation)
+        public async Task InterceptAsync(Task<IRestResponse<TR>> previousInvocation)
         {
             await previousInvocation;
 
@@ -34,7 +34,7 @@ namespace Retrofit.Net.Interceptors
             if (invocation.ReturnValue.GetType().GetGenericTypeDefinition() == typeof(Task<>))
             {
                 ((Task)invocation.ReturnValue).Wait();
-                var restResponse = ((Task<IRestResponse<R>>)invocation.ReturnValue).Result;
+                var restResponse = ((Task<IRestResponse<TR>>)invocation.ReturnValue).Result;
                 firstCallStatusCode = restResponse.StatusCode;
             }
             else

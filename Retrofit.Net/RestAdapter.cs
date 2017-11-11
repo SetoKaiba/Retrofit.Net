@@ -1,6 +1,7 @@
 ﻿using Castle.DynamicProxy;
 using RestSharp;
-
+using RestSharp.Authenticators;
+using RestSharp.Deserializers;
 using Retrofit.Net.Interceptors;
 
 namespace Retrofit.Net
@@ -16,7 +17,7 @@ namespace Retrofit.Net
         {
             var client = new RestClient(baseUrl);
             client.RemoveHandler("application/json");
-            client.AddHandler("application/json", new JsonSerializer());
+            client.AddHandler("application/json", new JsonDeserializer());
             restClient = client;
         }
 
@@ -31,7 +32,7 @@ namespace Retrofit.Net
             restClient = client;
         }
 
-        public RestAdapter(IRestClient client, Authenticator authenticator) : this (client)
+        public RestAdapter(IRestClient client, Authenticator authenticator) : this(client)
         {
             _authenticator = authenticator;
             restClient.Authenticator = new OAuth2AuthorizationRequestHeaderAuthenticator(authenticator.AccessToken, authenticator.GrantType);
@@ -48,14 +49,9 @@ namespace Retrofit.Net
             where T : class
             where TR : class
         {
-            var proxyGenerationOptions = new ProxyGenerationOptions
-                                         {
-                                             Selector = new AsyncVsNonAsyncInterceptorSelector()
-                                         };
-
             return _generator.CreateInterfaceProxyWithoutTarget<T>(
-                new RestInterceptor(restClient), 
-                new RefreshTokenInterceptor<TR>(restClient, _authenticator), 
+                new RestInterceptor(restClient),
+                new RefreshTokenInterceptor<TR>(restClient, _authenticator),
                 new RestInterceptor(restClient, true));
         }
     }

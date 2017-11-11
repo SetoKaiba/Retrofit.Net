@@ -7,7 +7,7 @@ using NSubstitute;
 using NUnit.Framework;
 
 using RestSharp;
-
+using RestSharp.Authenticators;
 using Retrofit.Net.Attributes.Methods;
 using Retrofit.Net.Attributes.Parameters;
 

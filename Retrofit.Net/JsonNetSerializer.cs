@@ -1,25 +1,39 @@
-﻿using System.IO;
+﻿#region License
+//   Copyright 2010 John Sheehan
+//
+//   Licensed under the Apache License, Version 2.0 (the "License");
+//   you may not use this file except in compliance with the License.
+//   You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+//   Unless required by applicable law or agreed to in writing, software
+//   distributed under the License is distributed on an "AS IS" BASIS,
+//   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//   See the License for the specific language governing permissions and
+//   limitations under the License. 
+#endregion
+#region Acknowledgements
+// Original JsonSerializer contributed by Daniel Crenna (@dimebrain)
+#endregion
 
+using System.IO;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
-using RestSharp;
-using RestSharp.Deserializers;
-
-namespace Retrofit.Net
+namespace RestSharp.Serializers
 {
     /// <summary>
     /// Default JSON serializer for request bodies
     /// Doesn't currently use the SerializeAs attribute, defers to Newtonsoft's attributes
     /// </summary>
-    public class JsonSerializer : IDeserializer
+    public class JsonNetSerializer : ISerializer
     {
         private readonly Newtonsoft.Json.JsonSerializer _serializer;
 
         /// <summary>
         /// Default serializer
         /// </summary>
-        public JsonSerializer()
+        public JsonNetSerializer()
         {
             ContentType = "application/json";
             _serializer = new Newtonsoft.Json.JsonSerializer
@@ -28,27 +42,34 @@ namespace Retrofit.Net
                 NullValueHandling = NullValueHandling.Include,
                 DefaultValueHandling = DefaultValueHandling.Include
             };
-            
-            _serializer.Converters.Add(new StringEnumConverter());
         }
 
         /// <summary>
         /// Default serializer with overload for allowing custom Json.NET settings
         /// </summary>
-        public JsonSerializer(Newtonsoft.Json.JsonSerializer serializer)
+        public JsonNetSerializer(Newtonsoft.Json.JsonSerializer serializer)
         {
             ContentType = "application/json";
             _serializer = serializer;
         }
 
-        public T Deserialize<T>(IRestResponse response)
+        /// <summary>
+        /// Serialize the object as JSON
+        /// </summary>
+        /// <param name="obj">Object to serialize</param>
+        /// <returns>JSON as String</returns>
+        public string Serialize(object obj)
         {
-            using (var textReader = new StringReader(response.Content))
+            using (var stringWriter = new StringWriter())
             {
-                using (var jsonReader = new JsonTextReader(textReader))
+                using (var jsonTextWriter = new JsonTextWriter(stringWriter))
                 {
-                    var result = _serializer.Deserialize<T>(jsonReader);
+                    jsonTextWriter.Formatting = Formatting.Indented;
+                    jsonTextWriter.QuoteChar = '"';
 
+                    _serializer.Serialize(jsonTextWriter, obj);
+
+                    var result = stringWriter.ToString();
                     return result;
                 }
             }
@@ -58,7 +79,6 @@ namespace Retrofit.Net
         /// Unused for JSON Serialization
         /// </summary>
         public string DateFormat { get; set; }
-
         /// <summary>
         /// Unused for JSON Serialization
         /// </summary>

@@ -9,7 +9,7 @@ using RestSharp;
 
 namespace Retrofit.Net.Interceptors
 {
-    public class RestInterceptor : ISyncInterceptor
+    public class RestInterceptor : IInterceptor
     {
         private readonly IRestClient _restClient;
 
